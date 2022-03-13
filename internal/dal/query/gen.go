@@ -26,6 +26,7 @@ func Use(db *gorm.DB) *Query {
 		PersonField:       newPersonField(db),
 		PersonSubjects:    newPersonSubjects(db),
 		RevisionHistory:   newRevisionHistory(db),
+		RevisionText:      newRevisionText(db),
 		Subject:           newSubject(db),
 		SubjectCollection: newSubjectCollection(db),
 		SubjectField:      newSubjectField(db),
@@ -49,6 +50,7 @@ type Query struct {
 	PersonField       personField
 	PersonSubjects    personSubjects
 	RevisionHistory   revisionHistory
+	RevisionText      revisionText
 	Subject           subject
 	SubjectCollection subjectCollection
 	SubjectField      subjectField
@@ -73,6 +75,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		PersonField:       q.PersonField.clone(db),
 		PersonSubjects:    q.PersonSubjects.clone(db),
 		RevisionHistory:   q.RevisionHistory.clone(db),
+		RevisionText:      q.RevisionText.clone(db),
 		Subject:           q.Subject.clone(db),
 		SubjectCollection: q.SubjectCollection.clone(db),
 		SubjectField:      q.SubjectField.clone(db),
@@ -94,6 +97,7 @@ type queryCtx struct {
 	PersonField       personFieldDo
 	PersonSubjects    personSubjectsDo
 	RevisionHistory   revisionHistoryDo
+	RevisionText      revisionTextDo
 	Subject           subjectDo
 	SubjectCollection subjectCollectionDo
 	SubjectField      subjectFieldDo
@@ -115,6 +119,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		PersonField:       *q.PersonField.WithContext(ctx),
 		PersonSubjects:    *q.PersonSubjects.WithContext(ctx),
 		RevisionHistory:   *q.RevisionHistory.WithContext(ctx),
+		RevisionText:      *q.RevisionText.WithContext(ctx),
 		Subject:           *q.Subject.WithContext(ctx),
 		SubjectCollection: *q.SubjectCollection.WithContext(ctx),
 		SubjectField:      *q.SubjectField.WithContext(ctx),

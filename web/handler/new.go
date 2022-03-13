@@ -29,6 +29,7 @@ func New(
 	p domain.PersonRepo,
 	a domain.AuthRepo,
 	e domain.EpisodeRepo,
+	r domain.RevisionRepo,
 	index domain.IndexRepo,
 	user domain.UserRepo,
 	cache cache.Generic,
@@ -44,6 +45,7 @@ func New(
 		e:     e,
 		c:     c,
 		i:     index,
+		r:     r,
 	}
 }
 

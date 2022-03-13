@@ -11,7 +11,7 @@ type RevisionRepo interface {
 
 	ListPersonRelated(
 		ctx context.Context, personID PersonIDType, limit int, offset int,
-	) ([]model.Revision, error)
+	) ([]*model.Revision, error)
 
-	GetPersonRelated(ctx context.Context, id IDType) (model.Revision, error)
+	GetPersonRelated(ctx context.Context, id IDType) (*model.Revision, error)
 }

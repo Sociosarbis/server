@@ -269,22 +269,16 @@ func main() {
 		}),
 	))
 
-	modelRevisionText := g.GenerateModelAs("chii_rev_text", "RevisionText",
+	g.ApplyBasic(g.GenerateModelAs("chii_rev_text", "RevisionText",
 		gen.FieldTrimPrefix("rev_"),
-		gen.FieldType("rev_text", "GzipPhpSerializedBlob"))
+		gen.FieldType("rev_text", "GzipPhpSerializedBlob")),
+	)
 
 	g.ApplyBasic(g.GenerateModelAs("chii_rev_history", "RevisionHistory",
 		gen.FieldTrimPrefix("rev_"),
 		gen.FieldRename("rev_edit_summary", "Summary"),
 		gen.FieldRename("rev_dateline", "CreatedAt"),
-		gen.FieldIgnore("rev_creator"),
-		gen.FieldRelate(field.HasOne, "Creator", modelMember, &field.RelateConfig{
-			GORMTag: "foreignKey:rev_creator;references:uid",
-		}),
-		gen.FieldRelate(field.HasOne, "Data", modelRevisionText, &field.RelateConfig{
-			GORMTag:       "foreginKey:rev_text_id;references:text_id",
-			RelatePointer: true,
-		}),
+		gen.FieldRename("rev_creator", "CreatorID"),
 	))
 
 	// execute the action of code generation

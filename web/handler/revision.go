@@ -33,7 +33,7 @@ func (h Handler) listPersonRevision(c *fiber.Ctx, personID domain.PersonIDType, 
 	}
 	count, err := h.r.CountPersonRelated(c.Context(), personID)
 	if err != nil {
-		return errgo.Wrap(err, "episode.Count")
+		return errgo.Wrap(err, "revision.CountPersonRelated")
 	}
 
 	if count == 0 {
@@ -55,8 +55,13 @@ func (h Handler) listPersonRevision(c *fiber.Ctx, personID domain.PersonIDType, 
 
 	data := make([]res.Revision, len(revisions))
 
+	creatorMap, err := h.u.GetByIDs(c.Context(), listUniqueCreatorID(revisions)...)
+
+	if err != nil {
+		return errgo.Wrap(err, "user.GetByIDs")
+	}
 	for i, r := range revisions {
-		data[i] = convertModelRevision(&r)
+		data[i] = convertModelRevision(r, creatorMap)
 	}
 	response.Data = data
 	return c.JSON(response)
@@ -74,18 +79,38 @@ func (h Handler) GetPersionRevision(c *fiber.Ctx) error {
 			Details: util.DetailFromRequest(c),
 		})
 	}
-	return c.JSON(r)
+
+	creatorMap, err := h.u.GetByIDs(c.Context(), r.CreatorID)
+
+	if err != nil {
+		return errgo.Wrap(err, "user.GetByIDS")
+	}
+
+	return c.JSON(convertModelRevision(r, creatorMap))
 
 }
 
-func convertModelRevision(r *model.Revision) res.Revision {
+func listUniqueCreatorID(revisions []*model.Revision) []domain.IDType {
+	m := map[domain.IDType]bool{}
+	ret := []domain.IDType{}
+	for _, r := range revisions {
+		if _, ok := m[r.CreatorID]; !ok {
+			m[r.CreatorID] = true
+			ret = append(ret, r.CreatorID)
+		}
+	}
+	return ret
+}
+
+func convertModelRevision(r *model.Revision, creatorMap map[domain.IDType]model.User) res.Revision {
+	creator := creatorMap[r.CreatorID]
 	return res.Revision{
 		ID:      r.ID,
 		Type:    r.Type,
 		Summary: r.Summary,
 		Creator: res.Creator{
-			Username: r.Creator.Username,
-			Nickname: r.Creator.Nickname,
+			Username: creator.UserName,
+			Nickname: creator.UserName,
 		},
 		CreatedAt: r.CreatedAt,
 		Data:      r.Data,

@@ -2,7 +2,7 @@ package datatypes
 
 import (
 	"bytes"
-	"compress/gzip"
+	"compress/flate"
 	"database/sql/driver"
 	"errors"
 	"fmt"
@@ -13,14 +13,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-type GzipPhpSerializedBlob []interface{}
+type GzipPhpSerializedBlob map[interface{}]interface{}
 
 func decompress(data []byte) ([]byte, error) {
-	gr, err := gzip.NewReader(bytes.NewBuffer(data))
-	if err != nil {
-		defer gr.Close()
-		return nil, err
-	}
+	gr := flate.NewReader(bytes.NewBuffer(data))
 	defer gr.Close()
 	bytes, err := ioutil.ReadAll(gr)
 	if err != nil {
@@ -38,7 +34,7 @@ func (b *GzipPhpSerializedBlob) Scan(value interface{}) error {
 	if err != nil {
 		return err
 	}
-	result, err := phpserialize.UnmarshalIndexedArray(bytes)
+	result, err := phpserialize.UnmarshalAssociativeArray(bytes)
 	*b = result
 	return err
 }

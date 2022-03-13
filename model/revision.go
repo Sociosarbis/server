@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/bangumi/server/internal/dal/dao"
 )
 
 type Creator struct {
@@ -13,7 +15,7 @@ type Revision struct {
 	ID        uint32
 	Type      uint8
 	Summary   string
-	Creator   Creator
+	CreatorID uint32
 	CreatedAt time.Time
-	Data      []interface{}
+	Data      dao.GzipPhpSerializedBlob
 }

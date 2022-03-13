@@ -29,23 +29,8 @@ func newRevisionHistory(db *gorm.DB) revisionHistory {
 	_revisionHistory.Mid = field.NewUint32(tableName, "rev_mid")
 	_revisionHistory.TextID = field.NewUint32(tableName, "rev_text_id")
 	_revisionHistory.CreatedAt = field.NewInt32(tableName, "rev_dateline")
+	_revisionHistory.CreatorID = field.NewUint32(tableName, "rev_creator")
 	_revisionHistory.Summary = field.NewString(tableName, "rev_edit_summary")
-	_revisionHistory.Creator = revisionHistoryHasOneCreator{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Creator", "dao.Member"),
-		Fields: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Creator.Fields", "dao.MemberField"),
-		},
-	}
-
-	_revisionHistory.Data = revisionHistoryHasOneData{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Data", "dao.RevisionText"),
-	}
 
 	_revisionHistory.fillFieldMap()
 
@@ -61,10 +46,8 @@ type revisionHistory struct {
 	Mid       field.Uint32
 	TextID    field.Uint32
 	CreatedAt field.Int32
+	CreatorID field.Uint32
 	Summary   field.String
-	Creator   revisionHistoryHasOneCreator
-
-	Data revisionHistoryHasOneData
 
 	fieldMap map[string]field.Expr
 }
@@ -86,6 +69,7 @@ func (r *revisionHistory) updateTableName(table string) *revisionHistory {
 	r.Mid = field.NewUint32(table, "rev_mid")
 	r.TextID = field.NewUint32(table, "rev_text_id")
 	r.CreatedAt = field.NewInt32(table, "rev_dateline")
+	r.CreatorID = field.NewUint32(table, "rev_creator")
 	r.Summary = field.NewString(table, "rev_edit_summary")
 
 	r.fillFieldMap()
@@ -109,155 +93,19 @@ func (r *revisionHistory) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (r *revisionHistory) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 8)
+	r.fieldMap = make(map[string]field.Expr, 7)
 	r.fieldMap["rev_id"] = r.ID
 	r.fieldMap["rev_type"] = r.Type
 	r.fieldMap["rev_mid"] = r.Mid
 	r.fieldMap["rev_text_id"] = r.TextID
 	r.fieldMap["rev_dateline"] = r.CreatedAt
+	r.fieldMap["rev_creator"] = r.CreatorID
 	r.fieldMap["rev_edit_summary"] = r.Summary
-
 }
 
 func (r revisionHistory) clone(db *gorm.DB) revisionHistory {
 	r.revisionHistoryDo.ReplaceDB(db)
 	return r
-}
-
-type revisionHistoryHasOneCreator struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	Fields struct {
-		field.RelationField
-	}
-}
-
-func (a revisionHistoryHasOneCreator) Where(conds ...field.Expr) *revisionHistoryHasOneCreator {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a revisionHistoryHasOneCreator) WithContext(ctx context.Context) *revisionHistoryHasOneCreator {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a revisionHistoryHasOneCreator) Model(m *dao.RevisionHistory) *revisionHistoryHasOneCreatorTx {
-	return &revisionHistoryHasOneCreatorTx{a.db.Model(m).Association(a.Name())}
-}
-
-type revisionHistoryHasOneCreatorTx struct{ tx *gorm.Association }
-
-func (a revisionHistoryHasOneCreatorTx) Find() (result *dao.Member, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a revisionHistoryHasOneCreatorTx) Append(values ...*dao.Member) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a revisionHistoryHasOneCreatorTx) Replace(values ...*dao.Member) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a revisionHistoryHasOneCreatorTx) Delete(values ...*dao.Member) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a revisionHistoryHasOneCreatorTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a revisionHistoryHasOneCreatorTx) Count() int64 {
-	return a.tx.Count()
-}
-
-type revisionHistoryHasOneData struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a revisionHistoryHasOneData) Where(conds ...field.Expr) *revisionHistoryHasOneData {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a revisionHistoryHasOneData) WithContext(ctx context.Context) *revisionHistoryHasOneData {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a revisionHistoryHasOneData) Model(m *dao.RevisionHistory) *revisionHistoryHasOneDataTx {
-	return &revisionHistoryHasOneDataTx{a.db.Model(m).Association(a.Name())}
-}
-
-type revisionHistoryHasOneDataTx struct{ tx *gorm.Association }
-
-func (a revisionHistoryHasOneDataTx) Find() (result *dao.RevisionText, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a revisionHistoryHasOneDataTx) Append(values ...*dao.RevisionText) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a revisionHistoryHasOneDataTx) Replace(values ...*dao.RevisionText) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a revisionHistoryHasOneDataTx) Delete(values ...*dao.RevisionText) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a revisionHistoryHasOneDataTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a revisionHistoryHasOneDataTx) Count() int64 {
-	return a.tx.Count()
 }
 
 type revisionHistoryDo struct{ gen.DO }
