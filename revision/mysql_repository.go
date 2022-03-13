@@ -57,18 +57,15 @@ func (r mysqlRepo) GetPersonRelated(ctx context.Context, id domain.IDType) (*mod
 			r.q.RevisionHistory.Type.In(model.PersonRevisionTypes...)).
 		First()
 
-	if err == nil {
-		data, err := r.q.RevisionText.WithContext(ctx).
-			Where(r.q.RevisionText.TextID.Eq(revision.TextID)).First()
-		if err == nil {
-			return convertRevisionDao(revision, data), nil
-		}
-		exitError = err
-	} else {
-		exitError = err
+	if err != nil {
+		return &model.Revision{}, errgo.Wrap(exitError, "dal")
 	}
-	r.log.Error("unexpected error happened", zap.Error(exitError))
-	return &model.Revision{}, errgo.Wrap(exitError, "dal")
+	data, err := r.q.RevisionText.WithContext(ctx).
+		Where(r.q.RevisionText.TextID.Eq(revision.TextID)).First()
+	if err != nil {
+		return &model.Revision{}, errgo.Wrap(exitError, "dal")
+	}
+	return convertRevisionDao(revision, data), nil
 }
 
 func convertRevisionDao(r *dao.RevisionHistory, data *dao.RevisionText) *model.Revision {

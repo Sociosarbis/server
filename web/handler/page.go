@@ -38,6 +38,10 @@ func (q pageQuery) check(count int64) error {
 			"limit should less equal than "+strconv.FormatInt(count, 10))
 	}
 
+	if int64(q.Offset) >= count {
+		return fiber.NewError(fiber.StatusBadRequest, "offset is greater than count")
+	}
+
 	return nil
 }
 

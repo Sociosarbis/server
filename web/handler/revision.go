@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"net/http"
+	"fmt"
 
 	"github.com/bangumi/server/internal/errgo"
 	"github.com/bangumi/server/internal/strparse"
@@ -14,13 +14,14 @@ import (
 )
 
 func (h Handler) ListPersonRevision(c *fiber.Ctx) error {
+	util.CacheControl(c, 300)
 	page, err := getPageQuery(c, episodeDefaultLimit, defaultMaxPageLimit)
 	if err != nil {
-		return fiber.NewError(http.StatusBadRequest, "bad query args: "+err.Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("bad query args: %s", err.Error()))
 	}
 	personID, err := strparse.Uint32(c.Query("person_id"))
 	if err != nil || personID <= 0 {
-		return fiber.NewError(http.StatusBadRequest, "bad person_id: "+c.Query("person_id"))
+		return util.BadQuery(c, "person_id")
 	}
 
 	return h.listPersonRevision(c, uint32(personID), page)
@@ -41,8 +42,8 @@ func (h Handler) listPersonRevision(c *fiber.Ctx, personID domain.PersonIDType, 
 		return c.JSON(response)
 	}
 
-	if int64(page.Offset) >= count {
-		return fiber.NewError(http.StatusBadRequest, "offset if greater than count")
+	if err := page.check(count); err != nil {
+		return err
 	}
 
 	response.Total = count
@@ -68,16 +69,14 @@ func (h Handler) listPersonRevision(c *fiber.Ctx, personID domain.PersonIDType, 
 }
 
 func (h Handler) GetPersionRevision(c *fiber.Ctx) error {
+	util.CacheControl(c, 300)
 	id, err := strparse.Uint32(c.Params("id"))
 	if err != nil || id <= 0 {
-		return fiber.NewError(http.StatusBadRequest, "bad id: "+c.Params("id"))
+		return util.BadParam(c, "id")
 	}
 	r, err := h.r.GetPersonRelated(c.Context(), id)
 	if err != nil {
-		return c.Status(http.StatusNotFound).JSON(res.Error{
-			Title:   "Not Found",
-			Details: util.DetailFromRequest(c),
-		})
+		return fiber.NewError(fiber.StatusNotFound)
 	}
 
 	creatorMap, err := h.u.GetByIDs(c.Context(), r.CreatorID)
