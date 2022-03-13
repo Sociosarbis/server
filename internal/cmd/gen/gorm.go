@@ -107,14 +107,15 @@ func main() {
 		gen.FieldType("uid", "uint32"),
 	)
 
-	g.ApplyInterface(func(method.Member) {},
-		g.GenerateModelAs("chii_members", "Member",
-			gen.FieldType("uid", "uint32"),
-			gen.FieldType("regdate", "int64"),
-			gen.FieldType("groupid", "uint8"),
-			gen.FieldRelate(field.HasOne, "Fields", modelField, &field.RelateConfig{
-				GORMTag: "foreignKey:UID;references:UID",
-			})))
+	modelMember := g.GenerateModelAs("chii_members", "Member",
+		gen.FieldType("uid", "uint32"),
+		gen.FieldType("regdate", "int64"),
+		gen.FieldType("groupid", "uint8"),
+		gen.FieldRelate(field.HasOne, "Fields", modelField, &field.RelateConfig{
+			GORMTag: "foreignKey:UID;references:UID",
+		}))
+
+	g.ApplyInterface(func(method.Member) {}, modelMember)
 
 	g.ApplyBasic(g.GenerateModelAs("chii_oauth_access_tokens", "OAuthAccessToken"))
 
@@ -265,6 +266,24 @@ func main() {
 		gen.FieldType("idx_rlt_type", "uint8"),
 		gen.FieldRelate(field.BelongsTo, "Subject", modelSubject, &field.RelateConfig{
 			GORMTag: "foreignKey:idx_rlt_sid;references:subject_id",
+		}),
+	))
+
+	modelRevisionText := g.GenerateModelAs("chii_rev_text", "RevisionText",
+		gen.FieldTrimPrefix("rev_"),
+		gen.FieldType("rev_text", "GzipPhpSerializedBlob"))
+
+	g.ApplyBasic(g.GenerateModelAs("chii_rev_history", "RevisionHistory",
+		gen.FieldTrimPrefix("rev_"),
+		gen.FieldRename("rev_edit_summary", "Summary"),
+		gen.FieldRename("rev_dateline", "CreatedAt"),
+		gen.FieldIgnore("rev_creator"),
+		gen.FieldRelate(field.HasOne, "Creator", modelMember, &field.RelateConfig{
+			GORMTag: "foreignKey:rev_creator;references:uid",
+		}),
+		gen.FieldRelate(field.HasOne, "Data", modelRevisionText, &field.RelateConfig{
+			GORMTag:       "foreginKey:rev_text_id;references:text_id",
+			RelatePointer: true,
 		}),
 	))
 

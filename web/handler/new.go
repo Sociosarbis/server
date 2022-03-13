@@ -56,6 +56,7 @@ type Handler struct {
 	c     domain.CharacterRepo
 	u     domain.UserRepo
 	i     domain.IndexRepo
+	r     domain.RevisionRepo
 	cache cache.Generic
 	log   *zap.Logger
 }
