@@ -7,13 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/elliotchance/phpserialize"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
-type GzipPhpSerializedBlob map[interface{}]interface{}
+type GzipPhpSerializedBlob map[string]interface{}
 
 func decompress(data []byte) ([]byte, error) {
 	gr := flate.NewReader(bytes.NewBuffer(data))
@@ -23,6 +24,26 @@ func decompress(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+func toValidJson(data interface{}) interface{} {
+	t := reflect.TypeOf(data).Kind()
+	if t == reflect.Array || t == reflect.Slice {
+		arr := data.([]interface{})
+		for i, val := range arr {
+			arr[i] = toValidJson(val)
+		}
+		return arr
+	} else if t == reflect.Map {
+		m := data.(map[interface{}]interface{})
+		ret := map[string]interface{}{}
+		for k, v := range m {
+			ret[fmt.Sprint(k)] = toValidJson(v)
+		}
+		return ret
+	} else {
+		return data
+	}
 }
 
 func (b *GzipPhpSerializedBlob) Scan(value interface{}) error {
@@ -35,7 +56,7 @@ func (b *GzipPhpSerializedBlob) Scan(value interface{}) error {
 		return err
 	}
 	result, err := phpserialize.UnmarshalAssociativeArray(bytes)
-	*b = result
+	*b = toValidJson(result).(map[string]interface{})
 	return err
 }
 

@@ -17,6 +17,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -120,7 +121,16 @@ func MockUserRepo(repo domain.UserRepo) fx.Option {
 	if repo == nil {
 		mocker := &domain.MockUserRepo{}
 		mocker.EXPECT().GetByID(mock.Anything, mock.Anything).Return(model.User{}, nil)
-
+		mocker.On("GetByIDs", mock.Anything, mock.Anything).
+			Return(func(ctx context.Context, ids ...uint32) map[uint32]model.User {
+				ret := map[uint32]model.User{}
+				for _, id := range ids {
+					ret[id] = model.User{}
+				}
+				return ret
+			}, func(ctx context.Context, ids ...uint32) error {
+				return nil
+			})
 		repo = mocker
 	}
 

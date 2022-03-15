@@ -15,7 +15,7 @@ import (
 
 func (h Handler) ListPersonRevision(c *fiber.Ctx) error {
 	util.CacheControl(c, 300)
-	page, err := getPageQuery(c, episodeDefaultLimit, defaultMaxPageLimit)
+	page, err := getPageQuery(c, defaultPageLimit, defaultMaxPageLimit)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("bad query args: %s", err.Error()))
 	}

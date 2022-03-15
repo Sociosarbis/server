@@ -30,6 +30,16 @@ func TestGetPersonRelated(t *testing.T) {
 
 	r, err := repo.GetPersonRelated(context.Background(), 348475)
 	require.NoError(t, err)
-
 	assert.Equal(t, uint32(348475), r.ID)
+}
+
+func TestListPersonRelated(t *testing.T) {
+	test.RequireEnv(t, "mysql")
+	t.Parallel()
+
+	repo := getRepo(t)
+
+	r, err := repo.ListPersonRelated(context.Background(), 9, 30, 0)
+	require.NoError(t, err)
+	assert.Equal(t, uint32(9), r[0].CreatorID)
 }
