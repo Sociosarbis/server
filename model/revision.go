@@ -33,3 +33,25 @@ type Revision struct {
 	CreatorID uint32
 	Type      uint8
 }
+
+type SubjectRevisionData struct {
+	Name         string
+	NameCN       string
+	VoteField    string
+	FieldInfobox string
+	FieldSummary string
+	Platform     uint16
+	TypeID       uint16
+	SubjectID    uint32
+	FieldEps     uint32
+	Type         uint8
+}
+
+type SubjectRevision struct {
+	Data      *SubjectRevisionData
+	CreatedAt time.Time
+	Summary   string
+	Type      uint8
+	ID        uint32
+	CreatorID uint32
+}
