@@ -177,23 +177,18 @@ func (h Handler) GetSubjectRevision(c *fiber.Ctx) error {
 
 }
 
-func listUniqueCreatorID(revisions interface{}) []model.IDType {
-	if revisions, ok := revisions.([]interface{}); ok {
-		m := make(map[model.IDType]bool, len(revisions))
-		ret := make([]model.IDType, len(revisions))
-		i := 0
-		for _, r := range revisions {
-			if r, ok := r.(model.Revision); ok {
-				if _, ok := m[r.CreatorID]; !ok {
-					m[r.CreatorID] = true
-					ret[i] = r.CreatorID
-					i++
-				}
-			}
+func listUniqueCreatorID(revisions []model.Revision) []model.IDType {
+	m := make(map[model.IDType]bool, len(revisions))
+	ret := make([]model.IDType, len(revisions))
+	i := 0
+	for _, r := range revisions {
+		if _, ok := m[r.CreatorID]; !ok {
+			m[r.CreatorID] = true
+			ret[i] = r.CreatorID
+			i++
 		}
-		return ret[:i]
 	}
-	return []model.IDType{}
+	return ret[:i]
 }
 
 func SafeDecodeExtra(k1 reflect.Type, k2 reflect.Type, input interface{}) (interface{}, error) {
@@ -245,7 +240,7 @@ func convertModelSubjectRevision(r *model.Revision, creatorMap map[model.IDType]
 	creator := creatorMap[r.CreatorID]
 	var data *res.SubjectRevisionData
 	if r.Data != nil {
-		if subjectData, ok := r.Data.(model.SubjectRevisionData); ok {
+		if subjectData, ok := r.Data.(*model.SubjectRevisionData); ok {
 			data = &res.SubjectRevisionData{
 				Name:         subjectData.Name,
 				NameCN:       subjectData.NameCN,

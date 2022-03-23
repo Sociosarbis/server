@@ -86,7 +86,7 @@ func TestGetSubjectRelatedBasic(t *testing.T) {
 	r, err := repo.GetSubjectRelated(context.Background(), 718391)
 	require.NoError(t, err)
 	require.Equal(t, uint32(718391), r.ID)
-	data, ok := r.Data.(model.SubjectRevisionData)
+	data, ok := r.Data.(*model.SubjectRevisionData)
 	require.True(t, ok)
 	require.Equal(t, data.Name, "第一次的親密接觸")
 }
