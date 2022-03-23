@@ -26,12 +26,12 @@ type Creator struct {
 }
 
 type Revision struct {
+	Data      interface{}
 	CreatedAt time.Time
-	Data      map[string]interface{}
 	Summary   string
+	Type      uint8
 	ID        uint32
 	CreatorID uint32
-	Type      uint8
 }
 
 type SubjectRevisionData struct {
@@ -45,13 +45,4 @@ type SubjectRevisionData struct {
 	SubjectID    uint32
 	FieldEps     uint32
 	Type         uint8
-}
-
-type SubjectRevision struct {
-	Data      *SubjectRevisionData
-	CreatedAt time.Time
-	Summary   string
-	Type      uint8
-	ID        uint32
-	CreatorID uint32
 }

@@ -100,9 +100,9 @@ func (r mysqlRepo) CountSubjectRelated(ctx context.Context, id model.SubjectIDTy
 
 func (r mysqlRepo) ListSubjectRelated(
 	ctx context.Context, id model.SubjectIDType, limit int, offset int,
-) ([]model.SubjectRevision, error) {
+) ([]model.Revision, error) {
 	revisions, err := r.q.SubjectRevision.WithContext(ctx).
-		Where(r.q.SubjectRevision.SubjectID.Eq(id), r.q.SubjectRevision.Type.In(model.PersonRevisionTypes()...)).
+		Where(r.q.SubjectRevision.SubjectID.Eq(id)).
 		Order(r.q.SubjectRevision.ID.Desc()).
 		Limit(limit).
 		Offset(offset).Find()
@@ -110,20 +110,20 @@ func (r mysqlRepo) ListSubjectRelated(
 		return nil, errgo.Wrap(err, "dal")
 	}
 
-	result := make([]model.SubjectRevision, len(revisions))
+	result := make([]model.Revision, len(revisions))
 	for i, revision := range revisions {
 		result[i] = convertSubjectRevisionDao(revision, false)
 	}
 	return result, nil
 }
 
-func (r mysqlRepo) GetSubjectRelated(ctx context.Context, id model.IDType) (model.SubjectRevision, error) {
+func (r mysqlRepo) GetSubjectRelated(ctx context.Context, id model.IDType) (model.Revision, error) {
 	revision, err := r.q.SubjectRevision.WithContext(ctx).
-		Where(r.q.RevisionHistory.ID.Eq(id)).
+		Where(r.q.SubjectRevision.ID.Eq(id)).
 		First()
 
 	if err != nil {
-		return model.SubjectRevision{}, errgo.Wrap(err, "dal")
+		return model.Revision{}, errgo.Wrap(err, "dal")
 	}
 	return convertSubjectRevisionDao(revision, true), nil
 }
@@ -184,7 +184,7 @@ func convertRevisionDao(r *dao.RevisionHistory, data *dao.RevisionText) model.Re
 	}
 }
 
-func convertSubjectRevisionDao(r *dao.SubjectRevision, isDetailed bool) model.SubjectRevision {
+func convertSubjectRevisionDao(r *dao.SubjectRevision, isDetailed bool) model.Revision {
 	var data *model.SubjectRevisionData
 	if isDetailed {
 		data = &model.SubjectRevisionData{
@@ -201,7 +201,7 @@ func convertSubjectRevisionDao(r *dao.SubjectRevision, isDetailed bool) model.Su
 		}
 	}
 
-	return model.SubjectRevision{
+	return model.Revision{
 		ID:        r.ID,
 		Type:      r.Type,
 		Summary:   r.EditSummary,
